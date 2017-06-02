@@ -19,8 +19,8 @@ function mapDispatchToProps(dispatch) {
         fetchStory: (id) => {
             dispatch(getStory(id));
         },
-        fetchComments: (ids) => {
-            dispatch(getComments(ids))
+        fetchComments: (ids, start, end) => {
+            dispatch(getComments(ids, start, end))
         },
         resetDescription: () => {
             dispatch(resetStoryDescription())
@@ -33,9 +33,8 @@ class StoryDescription extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            data: this.props.storyDescription.comments,
-            page: 10,
-            loading: false
+            page: 15,
+            reachedEnd: false
         }
     }
 
@@ -43,40 +42,25 @@ class StoryDescription extends React.Component{
         this.props.fetchStory(this.props.params.id);
     }
 
-    componentWillReceiveProps(nextProps){
-        if(this.props.storyDescription && this.props.storyDescription.comments && nextProps.storyDescription && nextProps.storyDescription.comments && nextProps.storyDescription.comments !== this.props.storyDescription.comments) {
-            this.setState({data: nextProps.storyDescription.comments});
-        }
-    }
-
     componentWillUnMount(){
         this.props.resetDescription();
     }
 
     handleClick = (ids) => {
-        this.props.fetchComments(ids);
+        this.props.fetchComments(ids, 0, 15);
     };
 
     loadData = () => {
-        const {data, page} = this.state;
-        if  ($(window).scrollTop() == $(document).height() - $(window).height() && data.length!== 0 && data.length !== page){
-            this.setState({loading: true});
-            setTimeout(() => {
-                let nextPage = page+10;
-                nextPage < data.length ? this.setState({page: nextPage}) : this.setState({page: data.length});
-                this.setState({loading: false});
-            },300);
-
-
+        const { page, reachedEnd } = this.state;
+        const { kids } = this.props.storyDescription.story;
+        let next_page = page + 15;
+        let end = next_page < kids.length ? next_page : kids.length;
+        if  ($(window).scrollTop() == $(document).height() - $(window).height() && !reachedEnd) {
+            this.setState({page: next_page});
+            this.props.fetchComments(kids, page, end);
+            kids.length === end ? this.setState({reachedEnd: true}) : null;
         }
     };
-
-    componentDidMount(){
-        window.addEventListener('scroll',this.loadData);
-    }
-    componentWillUnmount(){
-        window.removeEventListener('scroll',this.loadData);
-    }
 
     render(){
         const {
@@ -87,7 +71,7 @@ class StoryDescription extends React.Component{
             comments_pending,
             comments_failed
         } = this.props.storyDescription;
-        const {data, page, loading} = this.state;
+        const { page, loading } = this.state;
         return(
             <div style={{marginTop: "10%"}}>
                 <Description
@@ -97,7 +81,8 @@ class StoryDescription extends React.Component{
                 <Comments
                     story={story}
                     handleClick={this.handleClick}
-                    comments={data.slice(0, page)}
+                    loadData={this.loadData}
+                    comments={comments.slice(0, page)}
                     pending={comments_pending}
                     failed={comments_failed}
                     loading={loading}/>

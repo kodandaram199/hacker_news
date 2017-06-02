@@ -19,6 +19,7 @@ export const getTopStoriesIds = () => {
     return function (dispatch) {
         dispatch(requestTopStoriesIds());
         callApi(url).then(json =>{
+            dispatch(getTopStories(json, 0, 15));
             dispatch(receiveTopStoriesIds(json));
         })
             .catch(error => {
@@ -48,20 +49,21 @@ export const requestTopStoriesFailedIds = () => {
     };
 };
 
-export const getTopStories = (ids) => {
-    return function (dispatch) {
-        if(ids && ids.length>0 ){
+export const getTopStories = (ids, start, end) => {
+    if(ids && ids.length>0 ) {
+        let required_ids = ids.slice(start, end);
+        return function (dispatch) {
             dispatch(requestTopStories());
-            for(let i=0; i< ids.length; i++){
-                callApi(createStoryFetchUrl(ids[i])).then(json =>{
+            for (let i = 0; i < required_ids.length; i++) {
+                callApi(createStoryFetchUrl(required_ids[i])).then(json => {
                     dispatch(receiveTopStories(json));
                 })
-                    .catch(error => {
-                        dispatch(requestTopStoriesFailed())
-                    });
+                .catch(error => {
+                    dispatch(requestTopStoriesFailed())
+                });
             }
-        }
-    };
+        };
+    }
 };
 
 export const requestTopStories = () => {

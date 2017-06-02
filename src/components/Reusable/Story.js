@@ -8,9 +8,6 @@ import { getHours, getFormattedName } from '../../utils/utils';
 const Story = ({ stories, pending, failed, ids, loading }) => (
     <div style={{marginTop: "10%", marginBottom: "10%"}}>
         {
-            pending && <div className="loading"/>
-        }
-        {
             !pending && stories && stories.length > 0 &&
             stories.map((story, index) => (<div className="card" key={index}>
                 <div style={{paddingLeft: "5%"}}>
@@ -23,9 +20,6 @@ const Story = ({ stories, pending, failed, ids, loading }) => (
                 </div>
 
             </div>))
-        }
-        {
-            loading && <div className="loading"/>
         }
     </div>
 );

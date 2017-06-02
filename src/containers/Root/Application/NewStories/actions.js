@@ -19,6 +19,7 @@ export const getNewStoriesIds = () => {
     return function (dispatch) {
         dispatch(requestNewStoriesIds());
         callApi(url).then(json =>{
+            dispatch(getNewStories(json, 0, 15));
             dispatch(receiveNewStoriesIds(json));
         })
             .catch(error => {
@@ -48,20 +49,21 @@ export const requestNewStoriesFailedIds = () => {
     };
 };
 
-export const getNewStories = (ids) => {
-    return function (dispatch) {
-        if(ids && ids.length>0 ){
+export const getNewStories = (ids, start, end) => {
+    if(ids && ids.length>0 ) {
+        let required_ids = ids.slice(start, end);
+        return function (dispatch) {
             dispatch(requestNewStories());
-            for(let i=0; i< ids.length; i++){
-                callApi(createStoryFetchUrl(ids[i])).then(json =>{
+            for (let i = 0; i < required_ids.length; i++) {
+                callApi(createStoryFetchUrl(required_ids[i])).then(json => {
                     dispatch(receiveNewStories(json));
                 })
-                    .catch(error => {
-                        dispatch(requestNewStoriesFailed())
-                    });
+                .catch(error => {
+                    dispatch(requestNewStoriesFailed())
+                });
             }
-        }
-    };
+        };
+    }
 };
 
 export const requestNewStories = () => {

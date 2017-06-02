@@ -14,16 +14,16 @@ import StoryDescription from './containers/Root/Application/StoryDescription';
 import UserProfile from './containers/Root/Application/UserProfile';
 
 const routes = (
-    <Route path="/" component={App}>
+    <Route path={`${process.env.PUBLIC_URL}/`} component={App}>
         <IndexRoute component={NewStories}/>
-        <Route path="/top" component={TopStories}/>
-        <Route path="/best" component={BestStories}/>
-        <Route path="/ask" component={AskStories}/>
-        <Route path="/show" component={ShowStories}/>
-        <Route path="/jobs" component={Jobs}/>
-        <Route path="/story-description/:id" component={StoryDescription}/>
-        <Route path="/:user" component={UserProfile}/>
-        <Redirect path="*" to="/" />
+        <Route path={'/top'} component={TopStories}/>
+        <Route path={'/best'} component={BestStories}/>
+        <Route path={'/ask'} component={AskStories}/>
+        <Route path={'/show'} component={ShowStories}/>
+        <Route path={'/jobs'} component={Jobs}/>
+        <Route path={'/story-description/:id'} component={StoryDescription}/>
+        <Route path={'/:user'} component={UserProfile}/>
+        <Redirect path="*" to={`${process.env.PUBLIC_URL}/`} />
     </Route>
 );
 

@@ -20,6 +20,7 @@ export const getAskStoriesIds = () => {
         dispatch(requestAskStoriesIds());
         callApi(url).then(json =>{
             dispatch(receiveAskStoriesIds(json));
+            dispatch(getAskStories(json, 0, 15));
         })
         .catch(error => {
             dispatch(requestAskStoriesFailedIds())
@@ -48,20 +49,21 @@ export const requestAskStoriesFailedIds = () => {
     };
 };
 
-export const getAskStories = (ids) => {
-    return function (dispatch) {
-        if(ids && ids.length>0 ){
+export const getAskStories = (ids, start, end) => {
+    if(ids && ids.length>0 ) {
+        let required_ids = ids.slice(start, end);
+        return function (dispatch) {
             dispatch(requestAskStories());
-            for(let i=0; i< ids.length; i++){
-                callApi(createStoryFetchUrl(ids[i])).then(json =>{
+            for (let i = 0; i < required_ids.length; i++) {
+                callApi(createStoryFetchUrl(required_ids[i])).then(json => {
                     dispatch(receiveAskStories(json));
                 })
-                    .catch(error => {
-                        dispatch(requestAskStoriesFailed())
-                    });
+                .catch(error => {
+                    dispatch(requestAskStoriesFailed())
+                });
             }
-        }
-    };
+        };
+    }
 };
 
 export const requestAskStories = () => {
@@ -76,7 +78,7 @@ export const receiveAskStories = (json) => {
         payload: {
             json
         }
-    };
+    }
 };
 
 export const requestAskStoriesFailed = () => {

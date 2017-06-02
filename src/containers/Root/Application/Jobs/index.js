@@ -5,6 +5,7 @@ import React from 'react';
 import { getJobsIds, getJobs } from './actions';
 import { connect } from 'react-redux';
 import Story from '../../../../components/Reusable/Story';
+import InfiniteScroll from '../../../../components/Reusable/InfiniteScroll';
 import $ from 'jquery';
 
 function mapStateToProps(state) {
@@ -18,8 +19,8 @@ function mapDispatchToProps(dispatch) {
         fetchIds: () => {
             dispatch(getJobsIds());
         },
-        fetchStories: (ids) => {
-            dispatch(getJobs(ids));
+        fetchStories: (ids, start, end) => {
+            dispatch(getJobs(ids, start, end));
         }
     };
 }
@@ -29,23 +30,13 @@ class Jobs extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            data: this.props.jobStories.jobs,
             page: 15,
-            loading: false
+            reachedEnd: false
         }
     }
 
     componentWillMount(){
         this.props.fetchIds();
-    }
-
-    componentWillReceiveProps(nextProps){
-        if(this.props.jobStories && this.props.jobStories.jobs_ids && nextProps.jobStories && nextProps.jobStories.jobs_ids && nextProps.jobStories.jobs_ids !== this.props.jobStories.jobs_ids) {
-            this.props.fetchStories(nextProps.jobStories.jobs_ids);
-        }
-        if(this.props.jobStories && this.props.jobStories.jobs && nextProps.jobStories && nextProps.jobStories.jobs && nextProps.jobStories.jobs !== this.props.jobStories.jobs) {
-            this.setState({data: nextProps.jobStories.jobs});
-        }
     }
 
     componentDidMount(){
@@ -56,25 +47,26 @@ class Jobs extends React.Component{
     }
 
     loadData = () => {
-        const {data, page} = this.state;
-        if  ($(window).scrollTop() == $(document).height() - $(window).height() && data.length!== 0 && data.length !== page){
-            this.setState({loading: true});
-            setTimeout(() => {
-                let nextPage = page+15;
-                nextPage < data.length ? this.setState({page: nextPage}) : this.setState({page: data.length});
-                this.setState({loading: false});
-            },100);
-
-
+        const { page, reachedEnd } = this.state;
+        const { jobs_ids } = this.props.jobStories;
+        let next_page = page + 15;
+        let end = next_page < jobs_ids.length ? next_page : jobs_ids.length;
+        if  ($(window).scrollTop() == $(document).height() - $(window).height() && !reachedEnd) {
+            this.setState({page: next_page});
+            this.props.fetchStories(jobs_ids, page, end);
+            jobs_ids.length === end ? this.setState({reachedEnd: true}) : null;
         }
     };
 
     render(){
-        const { jobs, jobs_pending, jobs_failed, jobs_ids } = this.props.jobStories;
-        const {data, page, loading} = this.state;
+        const { jobs, jobs_pending } = this.props.jobStories;
         return(
             <div>
-                <Story stories={data.slice(0, page)} pending={jobs_pending} failed={jobs_failed} ids={jobs_ids} loading={loading}/>
+                <InfiniteScroll
+                    data={<Story stories={jobs}/>}
+                    isLoading={jobs_pending}
+                    loadingComponent={<div className="loading"></div>}
+                />
             </div>
         )
     }

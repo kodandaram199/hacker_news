@@ -5,6 +5,7 @@ import React from 'react';
 import { getBestStoriesIds, getBestStories } from './actions';
 import { connect } from 'react-redux';
 import Story from '../../../../components/Reusable/Story';
+import InfiniteScroll from '../../../../components/Reusable/InfiniteScroll';
 import $ from 'jquery';
 
 function mapStateToProps(state) {
@@ -18,8 +19,8 @@ function mapDispatchToProps(dispatch) {
         fetchIds: () => {
             dispatch(getBestStoriesIds());
         },
-        fetchStories: (ids) => {
-            dispatch(getBestStories(ids));
+        fetchStories: (ids, start, end) => {
+            dispatch(getBestStories(ids, start, end));
         }
     };
 }
@@ -29,23 +30,13 @@ class BestStories extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            data: this.props.bestStories.best_stories,
             page: 15,
-            loading: false
+            reachedEnd: false
         }
     }
 
     componentWillMount(){
         this.props.fetchIds();
-    }
-
-    componentWillReceiveProps(nextProps){
-        if(this.props.bestStories && this.props.bestStories.best_stories_ids && nextProps.bestStories && nextProps.bestStories.best_stories_ids && nextProps.bestStories.best_stories_ids !== this.props.bestStories.best_stories_ids) {
-            this.props.fetchStories(nextProps.bestStories.best_stories_ids);
-        }
-        if(this.props.bestStories && this.props.bestStories.best_stories && nextProps.bestStories && nextProps.bestStories.best_stories && nextProps.bestStories.best_stories !== this.props.bestStories.best_stories) {
-            this.setState({data: nextProps.bestStories.best_stories});
-        }
     }
 
     componentDidMount(){
@@ -56,25 +47,26 @@ class BestStories extends React.Component{
     }
 
     loadData = () => {
-        const {data, page} = this.state;
-        if  ($(window).scrollTop() == $(document).height() - $(window).height() && data.length!== 0 && data.length !== page){
-            this.setState({loading: true});
-            setTimeout(() => {
-                let nextPage = page+15;
-                nextPage < data.length ? this.setState({page: nextPage}) : this.setState({page: data.length});
-                this.setState({loading: false});
-            },100);
-
-
+        const {page, reachedEnd} = this.state;
+        const {best_stories_ids} = this.props.bestStories;
+        let next_page = page + 15;
+        let end = next_page < best_stories_ids.length ? next_page : best_stories_ids.length;
+        if  ($(window).scrollTop() == $(document).height() - $(window).height() && !reachedEnd) {
+            this.setState({page: next_page});
+            this.props.fetchStories(best_stories_ids, page, end);
+            best_stories_ids.length === end ? this.setState({reachedEnd: true}) : null;
         }
     };
 
     render(){
-        const { best_stories, best_stories_pending, best_stories_failed, best_stories_ids } = this.props.bestStories;
-        const {data, page, loading} = this.state;
+        const { best_stories, best_stories_pending } = this.props.bestStories;
         return(
             <div>
-                <Story stories={data.slice(0, page)} pending={best_stories_pending} failed={best_stories_failed} ids={best_stories_ids} loading={loading}/>
+                <InfiniteScroll
+                    data={<Story stories={best_stories}/>}
+                    isLoading={best_stories_pending}
+                    loadingComponent={<div className="loading"></div>}
+                />
             </div>
         )
     }

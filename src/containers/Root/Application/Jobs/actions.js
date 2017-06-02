@@ -19,11 +19,12 @@ export const getJobsIds = () => {
     return function (dispatch) {
         dispatch(requestJobsIds());
         callApi(url).then(json =>{
+            dispatch(getJobs(json, 0, 15));
             dispatch(receiveJobsIds(json));
         })
-            .catch(error => {
-                dispatch(requestJobsFailedIds())
-            });
+        .catch(error => {
+            dispatch(requestJobsFailedIds())
+        });
     }
 };
 
@@ -48,20 +49,21 @@ export const requestJobsFailedIds = () => {
     };
 };
 
-export const getJobs = (ids) => {
-    return function (dispatch) {
-        if(ids && ids.length>0 ){
+export const getJobs = (ids, start, end) => {
+    if(ids && ids.length >0) {
+        let required_ids = ids.slice(start, end);
+        return function (dispatch) {
             dispatch(requestJobs());
-            for(let i=0; i< ids.length; i++){
-                callApi(createStoryFetchUrl(ids[i])).then(json =>{
+            for (let i = 0; i < required_ids.length; i++) {
+                callApi(createStoryFetchUrl(required_ids[i])).then(json => {
                     dispatch(receiveJobs(json));
                 })
                     .catch(error => {
                         dispatch(requestJobsFailed())
                     });
             }
-        }
-    };
+        };
+    }
 };
 
 export const requestJobs = () => {

@@ -15,20 +15,21 @@ import { API_END_POINT } from '../../../../config/config'
 
 const createStoryFetchUrl = (id) => `${API_END_POINT}/item/${id}.json?print=pretty`;
 
-export const getComments = (ids) => {
-    return function (dispatch) {
-        if(ids && ids.length>0 ){
+export const getComments = (ids, start, end) => {
+    if(ids && ids.length>0 ) {
+        let required_ids = ids.slice(start, end);
+        return function (dispatch) {
             dispatch(requestComments());
-            for(let i=0; i< ids.length; i++){
-                callApi(createStoryFetchUrl(ids[i])).then(json =>{
-                    dispatch(receiveComments(ids[i], json));
+            for (let i = 0; i < required_ids.length; i++) {
+                callApi(createStoryFetchUrl(required_ids[i])).then(json => {
+                    dispatch(receiveComments(json));
                 })
                 .catch(error => {
                     dispatch(requestCommentsFailed())
                 });
             }
-        }
-    };
+        };
+    }
 };
 
 export const requestComments = () => {
@@ -37,14 +38,11 @@ export const requestComments = () => {
     };
 };
 
-export const receiveComments = (id, json) => {
+export const receiveComments = (json) => {
     return {
         type: RECEIVE_COMMENTS,
         payload: {
             json
-        },
-        meta: {
-            id
         }
     };
 };

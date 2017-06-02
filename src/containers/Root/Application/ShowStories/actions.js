@@ -19,6 +19,7 @@ export const getShowStoriesIds = () => {
     return function (dispatch) {
         dispatch(requestShowStoriesIds());
         callApi(url).then(json =>{
+            dispatch(getShowStories(json, 0, 15));
             dispatch(receiveShowStoriesIds(json));
         })
             .catch(error => {
@@ -48,20 +49,21 @@ export const requestShowStoriesFailedIds = () => {
     };
 };
 
-export const getShowStories = (ids) => {
-    return function (dispatch) {
-        if(ids && ids.length>0 ){
+export const getShowStories = (ids, start, end) => {
+    if(ids && ids.length>0 ) {
+        let required_ids = ids.slice(start, end);
+        return function (dispatch) {
             dispatch(requestShowStories());
-            for(let i=0; i< ids.length; i++){
-                callApi(createStoryFetchUrl(ids[i])).then(json =>{
+            for (let i = 0; i < required_ids.length; i++) {
+                callApi(createStoryFetchUrl(required_ids[i])).then(json => {
                     dispatch(receiveShowStories(json));
                 })
-                    .catch(error => {
-                        dispatch(requestShowStoriesFailed())
-                    });
+                .catch(error => {
+                    dispatch(requestShowStoriesFailed())
+                });
             }
-        }
-    };
+        };
+    }
 };
 
 export const requestShowStories = () => {
